@@ -1,6 +1,10 @@
 # 복제인간 시 — 플레이 테스트 데이터 수집
 
-게임 15장에 QA 계측, Netlify 서버 API, 비공개 데이터 저장소, 관리자 CSV 다운로드를 추가했습니다. **파일이 만들어진 상태이며 아직 인터넷에 배포되지는 않았습니다.**
+게임 15장에 QA 계측, Netlify 서버 API, 비공개 데이터 저장소, 관리자 CSV 다운로드를 추가했습니다. **2026-11-14 Netlify 운영 배포와 서버 저장 검증을 완료했습니다.**
+
+- 게임: https://hcp-ticketqa.netlify.app/
+- 관리자: https://hcp-ticketqa.netlify.app/admin/
+- GitHub main 브랜치와 자동 배포가 연결되어 있습니다. 관리자 인증번호는 서버 환경변수로 관리합니다.
 
 ## GitHub와 Netlify의 역할
 
