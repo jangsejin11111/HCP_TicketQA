@@ -824,6 +824,14 @@ window.addEventListener("resize",resetPointerInput);
 document.addEventListener("visibilitychange",()=>{if(document.hidden)resetPointerInput();});
 // Explicit menu controls handle game zoom. Scroll/pinch must not change the camera.
 scene.addEventListener("wheel",e=>e.preventDefault(),{passive:false});
+// Narrative taps are handled by pointerup. Cancel the native touch completion
+// only on the scene, including the last breath: it needs no synthetic click,
+// scrolling or browser smart zoom. Keep native buttons and scrolling intact.
+scene.addEventListener("touchend",e=>{
+  if(e.target.closest("button,input,select,textarea,a,#tools"))return;
+  if(e.cancelable)e.preventDefault();
+},{passive:false});
+
 for(const type of ["gesturestart","gesturechange"]){$("#app").addEventListener(type,e=>e.preventDefault(),{passive:false});}
 /* 센서: 기기와 화면에 따라 막혀 있을 수 있다. 신호가 실제로 들어올 때만 켜진 것으로 본다 */
 const SENS={tilt:false,mic:false,a0:null,b0:null,lastA:null,down:false,shakeT:0,lastAcc:null,got:false,micT:0,base:.02,hot:0};
