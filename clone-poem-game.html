@@ -15,11 +15,11 @@
   --fs:17px;
   color-scheme:light;
 }
-html,body{margin:0;width:100%;height:100%;background:var(--bg);color:var(--ink);font-family:var(--font);overflow:hidden;
+html,body{-webkit-text-size-adjust:100%;text-size-adjust:100%;overscroll-behavior:none;margin:0;width:100%;height:100%;background:var(--bg);color:var(--ink);font-family:var(--font);overflow:hidden;
   -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-#app{position:relative;width:100%;height:100%;height:100dvh;max-width:560px;margin:0 auto;overflow:hidden;background:var(--bg)}
+#app{touch-action:pan-y;position:relative;width:100%;height:100%;height:100dvh;max-width:560px;margin:0 auto;overflow:hidden;background:var(--bg)}
 .halo{text-shadow:0 0 2px var(--bg),0 0 4px var(--bg),0 0 8px var(--bg),0 0 14px var(--bg),0 0 22px var(--bg)}
 
 #title{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;justify-content:flex-end;gap:10px;
@@ -48,9 +48,9 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);color:var(--ink);
   font-size:var(--fs);line-height:1.65;display:flex;flex-direction:column;align-items:center;gap:14px;
   background:linear-gradient(to bottom,var(--bg) 0%,var(--bg) 70%,var(--bgA) 100%)}
 #talk:empty{display:none}
-.tb{animation:in .6s ease both;width:min(86vw,520px);flex:none;display:flex;flex-direction:column;align-items:center;gap:5px}
+.tb{min-width:0;max-width:100%;animation:in .6s ease both;width:min(86vw,520px);flex:none;display:flex;flex-direction:column;align-items:center;gap:5px}
 .who{font-size:11px;letter-spacing:.3em;opacity:.5;margin-bottom:2px}
-.tl{width:100%;word-break:keep-all;white-space:pre-line;text-align:center;animation:in .6s ease both}
+.tl{width:100%;overflow-wrap:anywhere;word-break:keep-all;white-space:pre-line;text-align:center;animation:in .6s ease both}
 .tb.mq .tl{font-weight:500}
 .tb.me .tl{opacity:.78}
 #choices{position:absolute;left:0;right:0;bottom:0;z-index:7;display:flex;flex-direction:column;align-items:center;gap:8px;
@@ -91,7 +91,7 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);color:var(--ink);
 
 #hint{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:6;
   font-size:12px;letter-spacing:.08em;color:var(--ink);background:var(--bg);border:1px solid var(--ink);border-radius:999px;padding:5px 12px;
-  white-space:nowrap;pointer-events:none;transition:opacity .6s}
+  white-space:normal;max-width:calc(100% - 32px);text-align:center;overflow-wrap:anywhere;pointer-events:none;transition:opacity .6s}
 #hint:empty{opacity:0}
 
 #tools{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));
@@ -103,10 +103,10 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);color:var(--ink);
 #tools{align-items:flex-start}
 #menuBtn{width:34px;height:34px;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
 #menuBtn span{display:block;width:14px;height:1px;background:currentColor}
-#menuPanel{display:flex;flex-direction:column;gap:10px;background:var(--bg);color:var(--ink);border:1px solid var(--ink);border-radius:14px;padding:12px 14px;font-size:12px}
+#menuPanel{max-width:calc(100vw - 28px);max-height:calc(100svh - 70px);overflow:auto;display:flex;flex-direction:column;gap:10px;background:var(--bg);color:var(--ink);border:1px solid var(--ink);border-radius:14px;padding:12px 14px;font-size:12px}
 #menuPanel[hidden]{display:none}
-.mrow{display:grid;grid-template-columns:5em 1fr 2.6em;align-items:center;gap:8px}
-.mrow input{width:110px;accent-color:#777}
+.mrow{display:grid;grid-template-columns:5em minmax(0,1fr) 2.6em;align-items:center;gap:8px}
+.mrow input{width:100%;min-width:0;max-width:110px;accent-color:#777}
 .mrow span:last-child{text-align:right;font-variant-numeric:tabular-nums}
 
 #panel{position:absolute;left:0;right:0;bottom:0;height:46%;z-index:5;overflow-y:auto;cursor:pointer;
@@ -131,6 +131,7 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);color:var(--ink);
 .route{background:var(--bg);color:var(--ink);border:1px solid var(--ink);border-radius:999px;padding:5px 12px;font:400 .8em/1.3 var(--font);cursor:pointer}
 .route:hover,.route:focus-visible{background:var(--ink);color:var(--bg);outline:none}
 
+@media (pointer:coarse){#app{height:100svh} #tools{max-width:calc(100% - 24px)} .tool,input{touch-action:manipulation}}
 @media (prefers-reduced-motion:reduce){.bird,.bug,.tapStart,.breath.wanted{animation:none}#scene.shake canvas{animation:none}}
 </style>
 
@@ -146,6 +147,7 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);color:var(--ink);
         <div id="menuPanel" hidden>
           <label class="mrow"><span>글자 크기</span><input id="fsRange" type="range" min="13" max="26" step="1" value="17"><span id="fsVal">17</span></label>
           <label class="mrow"><span>화면 확대</span><input id="zoomRange" type="range" min="0.7" max="3" step="0.1" value="1"><span id="zoomVal">1.0×</span></label>
+          <button class="tool" id="resetViewBtn" type="button">화면 확대 원래대로</button>
           <button class="tool" id="lockBtn" type="button" aria-pressed="false">위아래 고정하기</button>
         </div>
         <button class="tool" id="menuBtn" type="button" aria-label="설정" aria-expanded="false"><span></span><span></span><span></span></button>
@@ -777,31 +779,44 @@ function loop(t){
 }
 
 function resetWalk(){
+  resetPointerInput(); setZoom(1); lookP=0;
   Object.assign(cam,{x:0,z:CH===8?-18:CH===9?-25:0,y:1.6,yaw:0,pitch:CH===2?-.06:0,phase:0}); walking=true; moving=false; turnV=0; downX=null; overhead=false;
   game.classList.add("walking");
 }
 /* ---------- 둘러보기: 좌우·위아래로 밀기, 두 손가락으로 확대/축소, 기울기, 흔들기, 숨 ---------- */
-let lookP=0, zoomV=1, downY=null, pinch0=0, zoom0=1; const ptrs=new Map();
+let lookP=0, zoomV=1, downY=null, activePointerId=null; const ptrs=new Set(), blockedTaps=new Set();
 let lockV=false;
 let cartHold=null; function hold4(){ if(!cartHold){ cartHold=new THREE.Group(); camera3.add(cartHold); } return cartHold; }
-function setZoom(v){ zoomV=clamp(v,.7,3); const z=$("#zoomVal"); if(z) z.textContent=zoomV.toFixed(1)+"×"; const r=$("#zoomRange"); if(r) r.value=zoomV; }
+function setZoom(v){ if(!Number.isFinite(v)) return; zoomV=clamp(v,.7,3); const z=$("#zoomVal"); if(z) z.textContent=zoomV.toFixed(1)+"×"; const r=$("#zoomRange"); if(r) r.value=zoomV; }
+function resetPointerInput(){ptrs.clear();blockedTaps.clear();activePointerId=null;moving=false;downX=null;downY=null;}
 scene.addEventListener("pointerdown",e=>{
-  if(e.target.closest("#tools")) return;
-  ptrs.set(e.pointerId,[e.clientX,e.clientY]);
-  if(ptrs.size===2){ const a=[...ptrs.values()]; pinch0=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1]); zoom0=zoomV; moving=false; downX=null; return; }
+  if(e.target.closest("#tools") || (e.pointerType==="mouse"&&e.button!==0)) return;
+  ptrs.add(e.pointerId);
+  if(ptrs.size>1){for(const id of ptrs) blockedTaps.add(id);activePointerId=null;moving=false;downX=null;downY=null;return;}
   if(!started||!walking) return;
-  moving=true; downX=e.clientX; downY=e.clientY; try{scene.setPointerCapture(e.pointerId);}catch(_){}
+  activePointerId=e.pointerId; moving=true; downX=e.clientX; downY=e.clientY;
+  try{scene.setPointerCapture(e.pointerId);}catch(_){}
 });
 scene.addEventListener("pointermove",e=>{
-  if(ptrs.has(e.pointerId)) ptrs.set(e.pointerId,[e.clientX,e.clientY]);
-  if(ptrs.size===2&&pinch0>0){ const a=[...ptrs.values()]; setZoom(zoom0*Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1])/pinch0); return; }
-  if(!walking||downX===null) return;
+  if(e.pointerId!==activePointerId||ptrs.size!==1||!walking||downX===null) return;
   cam.yaw+=(e.clientX-downX)*.006/zoomV; downX=e.clientX;
-  if(downY!==null){ if(!lockV) lookP=clamp(lookP+(e.clientY-downY)*.004/zoomV,-.75,.75); downY=e.clientY; }
+  if(downY!==null){if(!lockV)lookP=clamp(lookP+(e.clientY-downY)*.004/zoomV,-.75,.75);downY=e.clientY;}
 });
-const stopWalk=e=>{ if(e&&e.pointerId!==undefined) ptrs.delete(e.pointerId); if(ptrs.size<2) pinch0=0; moving=false;downX=null;downY=null;};
-scene.addEventListener("pointerup",stopWalk); scene.addEventListener("pointercancel",stopWalk);
-scene.addEventListener("wheel",e=>{ e.preventDefault(); setZoom(zoomV*(e.deltaY<0?1.08:1/1.08)); },{passive:false});
+const endPointer=e=>{
+  ptrs.delete(e.pointerId);
+  if(e.pointerId===activePointerId){activePointerId=null;moving=false;downX=null;downY=null;}
+  if(blockedTaps.delete(e.pointerId)){if(e.cancelable)e.preventDefault();e.stopPropagation();}
+};
+// Capture completion even when a dialog, menu or browser interrupts the gesture.
+window.addEventListener("pointerup",endPointer,true);
+window.addEventListener("pointercancel",endPointer,true);
+scene.addEventListener("lostpointercapture",e=>{ptrs.delete(e.pointerId);if(e.pointerId===activePointerId){activePointerId=null;moving=false;downX=null;downY=null;}});
+window.addEventListener("blur",resetPointerInput);
+window.addEventListener("resize",resetPointerInput);
+document.addEventListener("visibilitychange",()=>{if(document.hidden)resetPointerInput();});
+// Explicit menu controls handle game zoom. Scroll/pinch must not change the camera.
+scene.addEventListener("wheel",e=>e.preventDefault(),{passive:false});
+for(const type of ["gesturestart","gesturechange"]){$("#app").addEventListener(type,e=>e.preventDefault(),{passive:false});}
 /* 센서: 기기와 화면에 따라 막혀 있을 수 있다. 신호가 실제로 들어올 때만 켜진 것으로 본다 */
 const SENS={tilt:false,mic:false,a0:null,b0:null,lastA:null,down:false,shakeT:0,lastAcc:null,got:false,micT:0,base:.02,hot:0};
 function toast(t){ let d=$("#toast"); if(!d){ d=document.createElement("div"); d.id="toast"; d.style.cssText="position:absolute;left:50%;top:calc(52px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:9;background:var(--bg);color:var(--ink);border:1px solid var(--ink);border-radius:10px;padding:6px 12px;font:400 12px/1.4 var(--font);max-width:80vw;text-align:center;transition:opacity .5s;pointer-events:none"; scene.appendChild(d); }
@@ -5106,6 +5121,7 @@ const range=$("#fsRange");
 function setFs(v){root.style.setProperty("--fs",v+"px");$("#fsVal").textContent=v;range.value=v;try{localStorage.setItem("cp-fs2",v);}catch(e){}}
 try{const v=localStorage.getItem("cp-fs2"); if(v) setFs(+v);}catch(e){}
 $("#menuBtn").addEventListener("click",e=>{e.stopPropagation(); const p=$("#menuPanel"); p.hidden=!p.hidden; $("#menuBtn").setAttribute("aria-expanded",String(!p.hidden)); $("#menuBtn").classList.toggle("on",!p.hidden);});
+$("#resetViewBtn").addEventListener("click",e=>{e.stopPropagation();resetPointerInput();setZoom(1);lookP=0;});
 $("#zoomRange").addEventListener("input",e=>setZoom(+e.target.value));
 $("#lockBtn").addEventListener("click",e=>{e.stopPropagation(); lockV=!lockV; if(lockV) lookP=0; const b=$("#lockBtn"); b.classList.toggle("on",lockV); b.setAttribute("aria-pressed",String(lockV));});
 $("#tools").addEventListener("click",e=>e.stopPropagation());
@@ -5139,7 +5155,7 @@ const PRO=[["나에게는 특별한 능력이 있다."],["그것은 바로 고�
 ["나는 그런 고통은 느끼고 싶지 않기 때문에,","나는 내가 가진 이 특별한 능력을 없애는 방법을 찾고 있다."]];
 function prologue(){
   const o=document.createElement("div"); o.id="prologue";
-  o.style.cssText="position:fixed;inset:0;z-index:50;background:#000;color:#fff;font-family:var(--font);transition:opacity 1.4s;cursor:pointer";
+  o.style.cssText="position:fixed;inset:0;z-index:50;touch-action:pan-y;background:#000;color:#fff;font-family:var(--font);transition:opacity 1.4s;cursor:pointer";
   const eb=document.createElement("div"); eb.textContent="PROLOGUE"; eb.style.cssText="position:absolute;top:calc(18px + env(safe-area-inset-top,0px));left:max(26px,env(safe-area-inset-left,0px));font-size:11px;letter-spacing:.4em;opacity:.55;pointer-events:none"; o.appendChild(eb);
   /* 글자 크기 */
   const tools=document.createElement("div"); tools.style.cssText="position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));display:flex;gap:8px;align-items:center;z-index:2;cursor:default";

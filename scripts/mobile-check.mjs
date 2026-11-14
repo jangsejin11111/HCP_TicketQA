@@ -27,4 +27,34 @@ try{
  await writeFile(`test-results/mobile-${label}.json`,JSON.stringify(result,null,2));console.log(JSON.stringify(result));
  await page.setViewportSize({width:844,height:390});await page.waitForTimeout(1000);
  console.log('landscape',await page.evaluate(()=>({innerWidth,innerHeight,appHeight:document.querySelector('#app').clientHeight,canvasHeight:document.querySelector('#gl').clientHeight})));
+ await page.setViewportSize({width:390,height:844});await page.waitForTimeout(500);
+ // Real touch dispatch: two-finger spreads must change neither page nor game zoom.
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:150,y:450,id:1},{x:230,y:450,id:2}]});
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:60,y:450,id:1},{x:330,y:450,id:2}]});
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+ assert.equal(await page.locator('#zoomRange').inputValue(),'1');
+ assert.equal(await page.evaluate(()=>visualViewport.scale),1);
+ // End a pointer on a different overlay, then deliver a stray move and second touch.
+ await page.evaluate(()=>{
+  const scene=document.querySelector('#scene'),panel=document.querySelector('#panel');
+  scene.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerId:31,pointerType:'touch',clientX:100,clientY:400}));
+  panel.dispatchEvent(new PointerEvent('pointercancel',{bubbles:true,pointerId:31,pointerType:'touch'}));
+  scene.dispatchEvent(new PointerEvent('pointermove',{bubbles:true,pointerId:31,pointerType:'touch',clientX:350,clientY:400}));
+  scene.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerId:32,pointerType:'touch',clientX:120,clientY:400}));
+  window.dispatchEvent(new Event('blur'));
+  scene.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerId:32,pointerType:'touch'}));
+  panel.hidden=false;panel.style.opacity='1';panel.style.pointerEvents='auto';
+  panel.textContent='대사 영역 연속 탭 검사';
+ });
+ await page.touchscreen.tap(195,650);await page.waitForTimeout(50);await page.touchscreen.tap(195,650);await page.waitForTimeout(300);
+ assert.equal(await page.evaluate(()=>visualViewport.scale),1);
+ assert.equal(await page.locator('#zoomRange').inputValue(),'1');
+ await page.getByRole('button',{name:'설정',exact:true}).click();
+ await page.locator('#zoomRange').evaluate(el=>{el.value='2';el.dispatchEvent(new Event('input',{bubbles:true}));});
+ assert.equal(await page.locator('#zoomVal').textContent(),'2.0×');
+ await page.getByRole('button',{name:'화면 확대 원래대로'}).click();
+ assert.equal(await page.locator('#zoomVal').textContent(),'1.0×');
+ const menu=await page.locator('#menuPanel').boundingBox();assert.ok(menu.x>=0&&menu.x+menu.width<=390);
+ assert.deepEqual(errors,[]);
+ console.log('Touch regression passed: pinch, overlay cancellation, blur, rapid taps, manual zoom/reset and menu bounds.');
 }finally{await browser.close();server.close();}
