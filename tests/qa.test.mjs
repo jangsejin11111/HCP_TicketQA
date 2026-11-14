@@ -75,7 +75,7 @@ test('all game scripts compile and all chapter hooks connect to telemetry',async
   const html=await readFile('clone-poem-game.html','utf8');const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map(m=>m[1]).filter(Boolean);
   scripts.forEach(s=>new vm.Script(s));
   const hook=scripts[0].split('/* QA hooks:')[1].split('if(!location.hash) prologue();')[0];
-  const code='/* QA hooks:'+hook;const calls=[];const context={CH:1,started:true,window:{GameQA:{enter:(ch)=>calls.push(['enter',ch]),clear:()=>calls.push(['clear']),fail:r=>calls.push(['fail',r]),sync:()=>{}}}};
+  const code='/* QA hooks:'+hook;const calls=[];const context={scene3:null,renderer:null,resetChapterView:()=>{},CH:1,started:true,window:{GameQA:{enter:(ch)=>calls.push(['enter',ch]),clear:()=>calls.push(['clear']),fail:r=>calls.push(['fail',r]),sync:()=>{}}}};
   for(const name of ['start','resetGame','showFinale','finale2','explode4','crash9','theEnd15','startFall','leaveCart','hitByCar','die7','approach8','starve9','deathScreen14']) context[name]=()=>{};
   for(let n=2;n<=15;n++)context['startCh'+n]=()=>context.CH=n;
   vm.createContext(context);vm.runInContext(code,context);
