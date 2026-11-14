@@ -65,7 +65,7 @@
     overlay.style.cssText = 'position:fixed;inset:0;z-index:100000;background:#000c;display:grid;place-items:center;padding:24px;color:#eee;font:16px/1.7 system-ui';
     const card = document.createElement('section');
     card.setAttribute('role','dialog'); card.setAttribute('aria-modal','true'); card.setAttribute('aria-labelledby','qa-heading');
-    card.style.cssText = 'max-width:480px;background:#181c22;border:1px solid #59606b;border-radius:16px;padding:28px';
+    card.style.cssText = 'max-width:480px;max-height:calc(100dvh - 48px);overflow:auto;background:#181c22;border:1px solid #59606b;border-radius:16px;padding:28px';
     card.innerHTML = '<h2 id="qa-heading" style="margin-top:0">플레이 테스트 참여</h2><p>게임 개선을 위해 장별 체류·클리어 시간, 실패·재시작 횟수, 오류 발생 횟수를 서버에 저장해도 될까요?</p><p>이름·연락처·음성은 수집하지 않습니다. 무작위 플레이 세션 번호를 사용하며, 관리자가 데이터를 내려받아 분석합니다. 전송 대기 기록은 이 브라우저에 임시 보관됩니다.</p><p style="font-size:13px;color:#b8c0ca">수집 없이도 게임을 할 수 있습니다. 왼쪽 아래 QA 설정에서 언제든 중단할 수 있습니다. 중단 전 이미 서버에 저장된 데이터는 유지됩니다.</p>';
     const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:12px;flex-wrap:wrap';
     for (const [label, action] of [['동의하고 플레이', enable], ['수집 없이 플레이', disable]]) {
@@ -81,7 +81,7 @@
   }
   function mount() {
     status = document.createElement('button'); status.type = 'button'; status.title = 'QA 데이터 수집 설정';
-    status.style.cssText = 'position:fixed;bottom:8px;left:8px;z-index:99999;padding:5px 9px;background:#16191eee;color:#ddd;border:1px solid #666;border-radius:6px;font:11px system-ui;cursor:pointer';
+    status.style.cssText = 'position:fixed;bottom:calc(64px + env(safe-area-inset-bottom,0px));left:max(8px,env(safe-area-inset-left,0px));z-index:99999;padding:5px 9px;background:#16191eee;color:#ddd;border:1px solid #666;border-radius:6px;font:11px system-ui;cursor:pointer';
     status.textContent = 'QA 설정 · 수집 꺼짐'; status.onclick = showSettings; document.body.append(status);
     if (read(consentKey) === 'yes') enable(); else if (read(consentKey) !== 'no') showSettings();
   }

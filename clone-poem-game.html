@@ -1,3 +1,5 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>복제인간 시 Chapter 1</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,11 +15,11 @@
   --fs:17px;
   color-scheme:light;
 }
-html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--font);overflow:hidden;
+html,body{margin:0;width:100%;height:100%;background:var(--bg);color:var(--ink);font-family:var(--font);overflow:hidden;
   -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-#app{position:relative;height:100%;max-width:560px;margin:0 auto;overflow:hidden;background:var(--bg)}
+#app{position:relative;width:100%;height:100%;height:100dvh;max-width:560px;margin:0 auto;overflow:hidden;background:var(--bg)}
 .halo{text-shadow:0 0 2px var(--bg),0 0 4px var(--bg),0 0 8px var(--bg),0 0 14px var(--bg),0 0 22px var(--bg)}
 
 #title{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;justify-content:flex-end;gap:10px;
@@ -178,6 +180,10 @@ const mix=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
 const rgb=(c,a)=>a===undefined?"rgb("+(c[0]|0)+","+(c[1]|0)+","+(c[2]|0)+")":"rgba("+(c[0]|0)+","+(c[1]|0)+","+(c[2]|0)+","+a+")";
 function buzz(p){try{navigator.vibrate&&navigator.vibrate(p);}catch(e){}}
 function shake(){scene.classList.remove("shake");void scene.offsetWidth;scene.classList.add("shake");setTimeout(()=>scene.classList.remove("shake"),520);}
+// Touch devices use a smaller drawing buffer; layout remains in CSS pixels.
+const mobileGraphics=matchMedia('(pointer: coarse)').matches;
+const renderDpr=()=>Math.min(mobileGraphics?1.5:2,window.devicePixelRatio||1);
+let glWidth=0, glHeight=0, glDpr=0;
 const FONT='"IBM Plex Sans KR","Apple SD Gothic Neo","Noto Sans KR",sans-serif';
 
 /* ---------- 낮(흰 바탕 검은 글씨) ↔ 밤(검은 바탕 흰 글씨) ---------- */
@@ -437,7 +443,7 @@ function buildOld(){
 }
 function init3D(){
   if(!has3D) return;
-  renderer=new THREE.WebGLRenderer({canvas:$("#gl"),alpha:true,antialias:true});
+  renderer=new THREE.WebGLRenderer({canvas:$("#gl"),alpha:true,antialias:!mobileGraphics,powerPreference:"high-performance"});
   renderer.setClearColor(0x000000,0);
   scene3=new THREE.Scene();
   scene3.fog=new THREE.Fog(0xffffff,9,44);
@@ -463,7 +469,7 @@ function fit(cv,W,H,dpr){ if(cv.width!==Math.round(W*dpr)||cv.height!==Math.roun
 
 function render(t){
   const W=fieldCv.clientWidth, H=fieldCv.clientHeight; if(!W||!H) return;
-  const dpr=Math.min(2,window.devicePixelRatio||1);
+  const dpr=renderDpr();
   fit(fieldCv,W,H,dpr);
   const g=fctx||(fctx=fieldCv.getContext("2d"));
   if(CH!==4 && (Math.abs(nt-ntDrawn)>.03 || !cmPat)){ buildCmap(); buildTiles(); cmPat=g.createPattern(cmap,"no-repeat"); tiles.forEach(o=>o.pat=g.createPattern(o.cv,"repeat")); ntDrawn=nt; cmDirty=false; }
@@ -483,7 +489,7 @@ function render(t){
   const rowAt=yc=>{const v=(yc-cy)/F, den=sT+v*cT; if(den<1e-4) return null; const tt=camY/den; return {zr:tt*(cT-v*sT),invq:F/tt};};
   const horY = cT>.02 ? cy-F*sT/cT : -1;
   for(let y=Math.max(0,Math.ceil(horY+.5));y<H;){
-    const dyp=y-horY, rh=(th<.3&&dyp<70)?1:2, yc=y+rh/2;
+    const dyp=y-horY, rh=mobileGraphics?3:(th<.3&&dyp<70)?1:2, yc=y+rh/2;
     const r0=rowAt(yc), r1=rowAt(yc+1); if(!r0||!r1){y+=rh;continue;}
     const zr=r0.zr, invq=r0.invq, k=1/((r1.zr-r0.zr)||1e-6);
     if(cam.z+zr*c>SUMMIT){ y+=rh; continue; }
@@ -499,8 +505,11 @@ function render(t){
   g.globalAlpha=1;
 
   if(renderer){
-    if(fit(glCv,W,H,dpr)) renderer.setSize(W,H,false);
-    renderer.setPixelRatio(dpr);
+    // setPixelRatio calls setSize internally: never reset the WebGL canvas per frame.
+    if(glWidth!==W || glHeight!==H || glDpr!==dpr){
+      if(glDpr!==dpr) renderer.setPixelRatio(dpr);
+      renderer.setSize(W,H,false); glWidth=W; glHeight=H; glDpr=dpr;
+    }
     const n=.1;
     camera3.projectionMatrix.makePerspective(-(cx)/F*n,(W-cx)/F*n,cy/F*n,-(H-cy)/F*n,n,200);
     camera3.projectionMatrixInverse.copy(camera3.projectionMatrix).invert();
@@ -709,6 +718,7 @@ function fallStep(dt){
       const row=document.createElement("div"); row.style.cssText="display:flex;justify-content:center"; row.appendChild(b); wrap.appendChild(row); },1200); }
 }
 function loop(t){
+  if(document.hidden){lastT=t; requestAnimationFrame(loop); return;}
   window.GameQA?.sync(CH, started);
   const dt=Math.min(.05,lastT?(t-lastT)/1000:0); lastT=t;
   if(fall.on) fallStep(dt);
@@ -759,8 +769,10 @@ function loop(t){
   updateParts(dt); micTick(dt); if(!walking) lookP*=Math.pow(.25,dt);
   syncCss();
   update3D(dt,t/1000);
-  updateBirds(dt,t/1000); drawBirds(t/1000);
-  if((walking&&started) || overhead || t-lastR>33){ render(t); lastR=t; }
+  updateBirds(dt,t/1000);
+  // Keep simulation/input updates independent from the mobile drawing budget.
+  const drawInterval=mobileGraphics?1000/30:((walking&&started)||overhead?0:33);
+  if(t-lastR>=drawInterval){ drawBirds(t/1000); render(t); lastR=drawInterval? t-((t-lastR)%drawInterval):t; }
   requestAnimationFrame(loop);
 }
 
@@ -876,7 +888,7 @@ function updateBirds(dt,ts){
 }
 function drawBirds(ts){
   const W=bcv.clientWidth, H=bcv.clientHeight; if(!W||!H) return;
-  const dpr=Math.min(2,window.devicePixelRatio||1);
+  const dpr=renderDpr();
   if(bcv.width!==Math.round(W*dpr)||bcv.height!==Math.round(H*dpr)){bcv.width=Math.round(W*dpr);bcv.height=Math.round(H*dpr);}
   const g=bctx||(bctx=bcv.getContext("2d"));
   g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,bcv.width,bcv.height);
@@ -1216,7 +1228,7 @@ function addSob(){
 let sobCv=null;
 function sobClear(){ if(sobCv){ sobCv.remove(); sobCv=null; } }
 function sobStamp(n){
-  const W=scene.clientWidth, H=scene.clientHeight, d=Math.min(2,window.devicePixelRatio||1);
+  const W=scene.clientWidth, H=scene.clientHeight, d=renderDpr();
   if(!sobCv){ sobCv=document.createElement("canvas"); sobCv.width=W*d; sobCv.height=H*d; sobCv.style.cssText="position:absolute;inset:0;width:100%;height:100%;z-index:4;pointer-events:none"; scene.appendChild(sobCv); sobCv.seeds=[]; }
   const g=sobCv.getContext("2d"); g.setTransform(d,0,0,d,0,0); g.fillStyle="#000"; g.textAlign="center"; g.textBaseline="middle"; const sd=sobCv.seeds, k=sobI/SOBN;
   /* 이미 있는 글자 곁에서 복제된다. 가끔은 전혀 다른 곳에서 새로 시작한다 */
@@ -1577,7 +1589,7 @@ function drawCh4(g,W,H,dpr,F,cx,cy,c,sn,camY,th,bg,ts){
   const rowF=yc=>{const v=(yc-cy)/F, den=sT+v*cT; if(den<1e-4) return null; const tt=camY/den; return {zr:tt*(cT-v*sT),invq:F/tt};};
   const horY=cT>.02?cy-F*sT/cT:-1;
   for(let y=Math.max(0,Math.ceil(horY+.5));y<H;){
-    const rh=(y-horY<70)?1:2, yc=y+rh/2, r0=rowF(yc), r1=rowF(yc+1); if(!r0||!r1){y+=rh;continue;}
+    const rh=mobileGraphics?3:(y-horY<70)?1:2, yc=y+rh/2, r0=rowF(yc), r1=rowF(yc+1); if(!r0||!r1){y+=rh;continue;}
     const zr=r0.zr, invq=r0.invq, k=1/((r1.zr-r0.zr)||1e-6), Zw=cam.z+zr*c;
     if(!inC && Zw>FACE){ y+=rh; continue; }
     if(inC && Zw>EXIT){ g.globalAlpha=1; g.fillStyle="#fff"; g.fillRect(0,y,W,rh); y+=rh; continue; }
@@ -2192,7 +2204,7 @@ function drawCh6(g,W,H,dpr,F,cx,cy,c,sn,camY,th,bg,ts){
   const sxOf=(X,zr,invq)=>cx+invq*((X-cam.x-sn*zr)/cc);
   const dirtH=sliding6?camY:camY+1.3;
   for(let y=Math.max(0,Math.ceil(horY+.5));y<H;){
-    const rh=(y-horY<60)?1:2, yc=y+rh/2;
+    const rh=mobileGraphics?3:(y-horY<60)?1:2, yc=y+rh/2;
     /* 고속도로 바깥: 아래로 기울어진 흙비탈 */
     const d0=rowF(yc,dirtH), d1=rowF(yc+1,dirtH);
     if(d0&&d1&&(sliding6||cam.z+d0.zr*c<=roadEnd)){ const zr=d0.zr, invq=d0.invq, k=1/((d1.zr-d0.zr)||1e-6), sg=invq*CELL;
@@ -2454,7 +2466,7 @@ function drawCh7(g,W,H,dpr,F,cx,cy,c,sn,camY,th,bg,ts){
   const rowF=yc=>{const v=(yc-cy)/F, den=sT+v*cT; if(den<1e-4) return null; const tt=camY/den; return {zr:tt*(cT-v*sT),invq:F/tt};};
   const horY=cT>.02?cy-F*sT/cT:-1;
   for(let y=Math.max(0,Math.ceil(horY+.5));y<H;){
-    const rh=(y-horY<60)?1:2, yc=y+rh/2, r0=rowF(yc), r1=rowF(yc+1); if(!r0||!r1){y+=rh;continue;}
+    const rh=mobileGraphics?3:(y-horY<60)?1:2, yc=y+rh/2, r0=rowF(yc), r1=rowF(yc+1); if(!r0||!r1){y+=rh;continue;}
     const zr=r0.zr, invq=r0.invq, k=1/((r1.zr-r0.zr)||1e-6), sg=invq*CELL;
     setPatUV(P7.crack,16,16,0,0,yc,zr,invq,k,cx,c,sn); g.globalAlpha=1; g.fillStyle=P7.crack; g.fillRect(0,y,W,rh);
     const a=gA(sg)*.85; if(a>0){ const tl=pick(P7.tiles["흙"],sg); setPatUV(tl.pat,tl.su,tl.sv,0,0,yc,zr,invq,k,cx,c,sn); g.globalAlpha=a; g.fillStyle=tl.pat; g.fillRect(0,y,W,rh); }
@@ -2690,7 +2702,7 @@ const TYPO7=(()=>{
   };
 })();
 let pre7=null, preI7=-1, preT7=0;
-function renderImage7(i,cv){ const W=scene.clientWidth, H=scene.clientHeight, dpr=Math.min(2,window.devicePixelRatio||1); TYPO7(cv,IMGS[i%6],Math.floor(i/6),W,H,dpr); }
+function renderImage7(i,cv){ const W=scene.clientWidth, H=scene.clientHeight, dpr=renderDpr(); TYPO7(cv,IMGS[i%6],Math.floor(i/6),W,H,dpr); }
 function drawImage7(name,cyc){ const i=cyc*6+IMGS.indexOf(name); renderImage7(i,imgCv); }
 function prerender7(i){
   /* 지금 이미지를 보는 동안 다음 이미지를 미리 그려 둔다 */
