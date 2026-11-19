@@ -1,5 +1,21 @@
 (function () {
   'use strict';
+  // Rehearsal must neither send events nor change consent or pending real plays.
+  if (new URLSearchParams(location.search).get('rehearsal') === '1') {
+    window.GameQA = { sync() {}, enter() {}, clear() {}, fail() {} };
+    const mountRehearsal = () => {
+      const nav = document.createElement('nav');
+      nav.setAttribute('aria-label', '리허설 조작');
+      nav.style.cssText = 'position:fixed;bottom:calc(8px + env(safe-area-inset-bottom,0px));left:8px;z-index:99999;display:flex;gap:8px;align-items:center;flex-wrap:wrap;max-width:calc(100% - 16px);padding:6px 10px;background:#16191eee;color:#fff;border:1px solid #666;border-radius:8px;font:12px/1.5 system-ui';
+      const label = document.createElement('span'); label.textContent = '리허설 · 기록 안 함';
+      const back = document.createElement('a'); back.href = '/rehearsal/'; back.textContent = '장 목록'; back.style.color = '#b5d0ff';
+      const retry = document.createElement('button'); retry.type = 'button'; retry.textContent = '이 구간 다시 시작';
+      retry.style.cssText = 'font:inherit;padding:5px 8px;cursor:pointer'; retry.onclick = () => location.reload();
+      nav.append(label, back, retry); document.body.append(nav);
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountRehearsal); else mountRehearsal();
+    return;
+  }
   const consentKey = 'cp-qa-consent-v1', queueKey = 'cp-qa-pending-v1';
   let enabled = false, tracker = null, state = { chapter: 1, playing: false }, queue = [], busy = false;
   const read = key => { try { return localStorage.getItem(key); } catch { return null; } };
